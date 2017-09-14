@@ -8,6 +8,7 @@
 function Board(width=32, height=32, cells) {
   this.width = width
   this.height = height
+  //CHANGE//
   // We'll store our cells in a 1D typed array.
   // Typed arrays are a lot like normal arrays, but they're
   // (1) much faster, and (2) can only hold one kind of data type.
