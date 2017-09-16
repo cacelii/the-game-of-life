@@ -4,12 +4,22 @@ if (mainElement) {
 
   // Connect #step_btn to the step function
   document.getElementById('step_btn')
-    .addEventListener('click', game.step)
+    .addEventListener('click', () => game.step())
+    //anonymous function will get the event instead of //step's argument being a mouse event
+
+  document.getElementById('play_btn')
+    .addEventListener('click', game.togglePlaying)
+
+  document.getElementById('clear_btn')
+    .addEventListener('click', game.clear)
+
+    document.getElementById('reset_btn')
+    .addEventListener('click', game.random)
 
   // TODO: Connect other buttons.
 }
 
-function Life(container, width=12, height=12) {
+function Life(container, width=32, height=32) {
   // Create boards for the present and future.
   // Game boards are somewhat expensive to create, so we're going
   // to be reusing them. Each time we step the game, `future`
@@ -18,8 +28,9 @@ function Life(container, width=12, height=12) {
   var future = new Board(width, height);
 
   // Create a <table> to hold our cells.
+  const cells = [];
   var table = createTable();
-  
+
   // Put the table in our container
   container.appendChild(table);
 
@@ -38,24 +49,38 @@ function Life(container, width=12, height=12) {
         // We'll put the coordinate on the cell
         // Element itself, letting us fetch it
         // in a click listener later.
-        td.coord = [r, c];        
-        tr.appendChild(td);                            //     </td>
+        td.coord = [r, c];
+        tr.appendChild(td);
+        cells.push(td);
+        //</td>
       }
       table.appendChild(tr);                           //   </tr>
     }                                                  //  </table>
-    return table    
+    return table
   }
-  
+
   function toggleCellFromEvent(event) {
     // FIXME: This currently always toggles cell (0, 0).
     // How do we get the coordinate of the cell that was clicked on?
     // HINT: https://developer.mozilla.org/en-US/docs/Web/API/Event/target
-    var cell = document.getElementById('0-0'); // ⬅️ Fix me
-    present.toggle(cell.coord)
+    // var cell = document.getElementById('0-0');
+    // ⬅️ Fix me
+    present.toggle(event.target.coord)
     paint()
   }
 
   function paint() {
+    //collect these in createTable so we don't have to query
+    // const cells = document.querySelectorAll('td')
+    // (query can be expensive though)
+    let i = cells.length; while (--i >= 0) {
+      const td = cells[i];
+      if (present.get(td.coord)) {
+        td.classList.add('alive');
+      } else {
+        td.classList.remove('alive');
+      }
+    }
     // TODO:
     //   1. For each <td> in the table:
     //     a. If its cell is alive, give the <td> the `alive` CSS class.
@@ -69,10 +94,10 @@ function Life(container, width=12, height=12) {
     //   https://developer.mozilla.org/en-US/docs/Web/API/Element/getElementsByTagName
   }
 
-  function step() {
+  function step(rules) {
     // Hello, destructuring assignment:
     //   https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
-    ;[present, future] = tick(present, future);  // tick is from board.js
+    ;[present, future] = tick(present, future, rules);  // tick is from board.js
     // ⬆️ Why is there a semicolon at the beginning of this line?
     //
     // It's not necessary, but we have it there to avoid a confusing problem.
@@ -103,32 +128,40 @@ function Life(container, width=12, height=12) {
     paint();
   }
 
+  let interval = null
   function play() {
+    interval = setInterval(step, 113)
     // TODO:
-    // Start playing by running the `step` function    
+    // Start playing by running the `step` function
     // automatically repeatedly every fixed time interval
-    
+
     // HINT:
     // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
   }
 
+
   function stop() {
+    clearInterval(interval);
+    interval = null;
     // TODO: Stop autoplay.
     // HINT:
     // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/clearInterval
   }
 
   function togglePlaying() {
+    interval ? stop() : play()
     // TODO: If we're playing, stop. Otherwise, start playing.
   }
 
   function clear() {
+    step(() => 0)
     // TODO: Clear the board
   }
 
   function random() {
+    step(() => Math.round(Math.random()));
     // TODO: Randomize the board
   }
 
   return {play, step, stop, togglePlaying, random, clear}
-};
+}
